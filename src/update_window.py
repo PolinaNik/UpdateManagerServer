@@ -1,10 +1,15 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter.messagebox import askyesno, showinfo,showerror
 from read_config import rc_osnov, rc_reserv
 from textwrap import wrap
+from src import update_status
+
+#TODO: функция для обработки текста названия версии, при отсутсвии - текущая дата и время
+#TODO: подключение базы данных
 
 
-class TkInteractive(Tk):
+class UpdateWindow(Tk):
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
         self.title("Update Manager")
@@ -24,17 +29,17 @@ class TkInteractive(Tk):
         # получаем индексы выделенных элементов
         selected_indices = self.comp_listbox.curselection()
         # получаем сами выделенные элементы
-        selected_comps = ",".join([self.comp_listbox.get(i) for i in selected_indices])
-        msg = "вы выбрали: %s" % selected_comps
+        self.selected_comps = ",".join([self.comp_listbox.get(i) for i in selected_indices])
+        msg = "Вы выбрали: %s" % self.selected_comps
         self.selection_label["text"] = msg
         self.hostnames = ''
-        if selected_comps == "РЦ-основные места":
+        if self.selected_comps == "РЦ-основные места":
             self.hostnames = rc_osnov
-        elif selected_comps == "РЦ-резервные места":
+        elif self.selected_comps == "РЦ-резервные места":
             self.hostnames = rc_reserv
-        elif selected_comps == "АДЦ-основные места":
+        elif self.selected_comps == "АДЦ-основные места":
             self.hostnames = '[adc_osnov]'
-        elif selected_comps == "АДЦ-резервные места":
+        elif self.selected_comps == "АДЦ-резервные места":
             self.hostnames = '[adc_reserv]'
         text_hostnames = str(self.hostnames)[1:-1]
         if len(text_hostnames) > 100:
@@ -53,11 +58,35 @@ class TkInteractive(Tk):
     def select_process(self):
         self.header_process.config(text="Выбран %s" % self.process.get())
 
+    def ask_question(self):
+        # try:
+            result = askyesno(title="Подтвержение операции", message="Выполнить обновление на %s" % self.selected_comps)
+            if result:
+                if self.mode.get() == "режим без подтверждения (тихий)":
+                    question2 = askyesno(title="Подтверждение операции", message="Вы уверены, что обновление будет в тихом режиме (без подтверждения)?")
+                    if question2:
+                        showinfo("Результат", "Операция подтверждена")
+                        self.close()
+                    else:
+                        showinfo("Результат", "Операция отменена")
+                if not self.process.get():
+                    showerror("Ошибка", "Вы не выбрали процессы для перезагрузки")
+                showinfo("Результат", "Операция подтверждена")
+                self.update()
+            else:
+                showinfo("Результат", "Операция отменена")
+        # except AttributeError:
+        #     showerror("Ошибка", "Вы не выбрали рабочие места для обновления")
+
     def update(self):
-        pass
+        text_hostnames = str(self.hostnames)[1:-1]
+        print(text_hostnames)
+        root.destroy()
+        update_status.UpdateStatus(hostnames=text_hostnames).mainloop()
 
     def close(self):
         root.destroy()
+
 
     def create_panel_for_widget(self):
         # create panel frame
@@ -143,7 +172,8 @@ class TkInteractive(Tk):
         self.comment_field["yscrollcommand"] = self.scrollbar.set
 
         # update button
-        self.update_btn = Button(self.panel, text="Запуск обновления", command=self.update, activebackground="green2")
+        self.update_btn = Button(self.panel, text="Запуск обновления", command=self.ask_question,
+                                 activebackground="green2")
         self.update_btn.grid(row=15, column=1, pady=5, sticky="news")
 
         # close button
@@ -152,5 +182,5 @@ class TkInteractive(Tk):
 
 
 if __name__ == "__main__":
-    root = TkInteractive()
+    root = UpdateWindow()
     root.mainloop()
