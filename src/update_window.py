@@ -21,6 +21,7 @@ class UpdateWindow(Tk):
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
         self.create_widgets()
+        self.test = 'test'
 
     def create_widgets(self):
         self.create_panel_for_widget()
@@ -80,9 +81,10 @@ class UpdateWindow(Tk):
 
     def update(self):
         text_hostnames = str(self.hostnames)[1:-1]
-        print(text_hostnames)
         root.destroy()
-        update_status.UpdateStatus(hostnames=text_hostnames).mainloop()
+        new_root = Tk()
+        new_window = update_status.UpdateStatus(new_root, hostnames=text_hostnames)
+        new_window.mainloop()
 
     def close(self):
         root.destroy()
