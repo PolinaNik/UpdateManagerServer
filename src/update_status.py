@@ -5,7 +5,7 @@ from _thread import *
 import threading
 
 print_lock = threading.Lock()
-host = ('127.0.0.1')
+host = ('localhost')
 port = 12345
 
 #TODO: отображение статуса обновления
