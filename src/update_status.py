@@ -3,10 +3,16 @@ from tkinter import ttk
 import socket
 from _thread import *
 import threading
+from src import copy_files_tmp
+from src import update_client
 
 print_lock = threading.Lock()
 host = ('localhost')
 port = 12345
+
+# команда, чтобы очистить процессы, завязанные на порте:
+# sudo lsof -t -i tcp:12345 | xargs kill -9
+
 
 #TODO: отображение статуса обновления
 
@@ -66,6 +72,7 @@ class UpdateStatus(Frame):
         self.hostnames = hostnames
         self.create_panel_for_widget()
         threading.Thread(target=self.socket_connections).start()
+        update_client.ask_permition()
 
     def initialize_user_interface(self):
         self.parent.geometry("600x780")

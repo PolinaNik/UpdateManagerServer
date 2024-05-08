@@ -4,6 +4,9 @@ from tkinter.messagebox import askyesno, showinfo,showerror
 from read_config import rc_osnov, rc_reserv
 from textwrap import wrap
 from src import update_status
+from src import copy_files_tmp
+from src import update_client
+import threading
 
 #TODO: функция для обработки текста названия версии, при отсутсвии - текущая дата и время
 #TODO: подключение базы данных
@@ -13,7 +16,7 @@ class UpdateWindow(Tk):
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
         self.title("Update Manager")
-        self.geometry("600x780")
+        self.geometry("600x800")
         self.resizable(False, True)
         self.config(bg="white")
         self.grid_rowconfigure(0, weight=1)
@@ -81,6 +84,7 @@ class UpdateWindow(Tk):
 
     def update(self):
         text_hostnames = str(self.hostnames)[1:-1]
+        copy_files_tmp.copy_files_tmp(text_hostnames)
         root.destroy()
         new_root = Tk()
         new_window = update_status.UpdateStatus(new_root, hostnames=text_hostnames)
