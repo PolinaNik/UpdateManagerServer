@@ -1,12 +1,12 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter.messagebox import askyesno, showinfo,showerror
-from read_config import rc_osnov, rc_reserv
+from read_config import rc_osnov, rc_reserv, other_hosts
 from textwrap import wrap
-from src import update_status
-from src import copy_files_tmp
-from src import update_client
+import update_status
+import copy_files_tmp
 import threading
+from datetime import datetime
 
 #TODO: функция для обработки текста названия версии, при отсутсвии - текущая дата и время
 #TODO: подключение базы данных
@@ -39,19 +39,25 @@ class UpdateWindow(Tk):
         self.hostnames = ''
         if self.selected_comps == "РЦ-основные места":
             self.hostnames = rc_osnov
+            self.hostnames = str(self.hostnames)[1:-1]
         elif self.selected_comps == "РЦ-резервные места":
             self.hostnames = rc_reserv
+            self.hostnames = str(self.hostnames)[1:-1]
         elif self.selected_comps == "АДЦ-основные места":
             self.hostnames = '[adc_osnov]'
+            self.hostnames = str(self.hostnames)[1:-1]
         elif self.selected_comps == "АДЦ-резервные места":
             self.hostnames = '[adc_reserv]'
-        text_hostnames = str(self.hostnames)[1:-1]
-        if len(text_hostnames) > 100:
-            char_width = len(text_hostnames) / 100
-            wrapped_text = '\n'.join(wrap(text_hostnames, int(250 / char_width)))
+            self.hostnames = str(self.hostnames)[1:-1]
+        else:
+            self.hostnames = self.selected_comps
+        if len(self.hostnames) > 100:
+            char_width = len(self.hostnames) / 100
+            wrapped_text = '\n'.join(wrap(self.hostnames, int(250 / char_width)))
             self.selection_hostnames["text"] = wrapped_text
         else:
-            self.selection_hostnames["text"] = text_hostnames
+            self.selection_hostnames["text"] = self.hostnames
+        print(self.hostnames)
 
     def select_mode(self):
         self.header_mode.config(text="Выбран %s" % self.mode.get())
@@ -82,12 +88,34 @@ class UpdateWindow(Tk):
         # except AttributeError:
         #     showerror("Ошибка", "Вы не выбрали рабочие места для обновления")
 
+    def get_data(self):
+        # get input data
+        self.name_version = self.version_name_entry.get()
+        # if name of version is to short than name will be the current date and time
+        # example name of version if no name - 010924_1020
+        if len(self.name_version) < 5:
+            self.name_version = datetime.now().strftime('%d%m%Y_%H%M')
+        #self.selected_comps
+        self.text_hostnames = str(self.hostnames)[1:-1]
+        if self.mode.get() == "режим с подтверждением":
+            self.mode_value = 0
+        else:
+            self.mode_value = 1
+        self.name_proccess = self.process.get()
+        self.comment = self.comment_field.get("1.0", END)
+        if len(self.comment) < 5:
+            self.comment = "No comments"
+        print(self.comment)
+        with open('/home/server/Desktop/UpdateManagerServer_ubuntu/UpdateFiles/update_message', 'w') as f:
+            f.write(self.comment)
+
+
     def update(self):
-        text_hostnames = str(self.hostnames)[1:-1]
-        copy_files_tmp.copy_files_tmp(text_hostnames)
+        self.get_data()
+        copy_files_tmp.copy_files_tmp(self.hostnames)
         root.destroy()
         new_root = Tk()
-        new_window = update_status.UpdateStatus(new_root, hostnames=text_hostnames)
+        new_window = update_status.UpdateStatus(new_root, hostnames=self.hostnames)
         new_window.mainloop()
 
     def close(self):
@@ -117,6 +145,7 @@ class UpdateWindow(Tk):
         self.select_host_label.grid(row=2, column=0, columnspan=2, pady=5, sticky="news")
         self.group_hosts = ["РЦ-основные места", "РЦ-резервные места",
                             "АДЦ-основные места", "АДЦ-резервные места"]
+        self.group_hosts+=other_hosts
         self.comps_var = Variable(value=self.group_hosts)
         self.comp_listbox = Listbox(self.panel, listvariable=self.comps_var, selectmode=EXTENDED)
         self.comp_listbox.grid(row=3, column=0, columnspan=2, pady=5, sticky="news")

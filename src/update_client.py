@@ -1,4 +1,4 @@
-from tkinter.messagebox import askyesno
+from tkinter.messagebox import askquestion
 import os
 import shutil
 import socket
@@ -22,36 +22,39 @@ def delete_command(src_folder):
 
 
 
-with open('/home/polina/Test_Update_Folder_tmp/update_message', 'r') as message:
+with open('/home/client1/Desktop/files_for_update_tmp/update_message', 'r') as message:
     text_message = message.read()
 
 def ask_permition():
-    result = askyesno(title="Подтвержение операции", message=text_message)
-    if result:
-        copy_command('/home/polina/Test_Update_Folder_tmp/bin', '/home/polina/Test_Update_Folder/bin')
-        copy_command('/home/polina/Test_Update_Folder_tmp/etc', '/home/polina/Test_Update_Folder/etc')
-        delete_command('/home/polina/Test_Update_Folder_tmp/bin')
-        delete_command('/home/polina/Test_Update_Folder_tmp/etc')
-        os.remove('/home/polina/Test_Update_Folder_tmp/update_message')
+    root = tk.Tk()
+    root.geometry("1x1")
+    root.resizable(False, False)
+    result = askquestion(title="Подтвержение операции", message=text_message)
+    if result == 'yes':
+        copy_command('/home/client1/Desktop/files_for_update_tmp/bin', '/home/client1/Desktop/files_for_update/bin')
+        #copy_command('/home/polina/Test_Update_Folder_tmp/etc', '/home/polina/Test_Update_Folder/etc')
+        delete_command('/home/client1/Desktop/files_for_update_tmp/bin')
+        #delete_command('/home/polina/Test_Update_Folder_tmp/etc')
+        os.remove('/home/client1/Desktop/files_for_update_tmp/update_message')
 
-        host = '127.0.0.1'
+        host = '192.168.1.69'
         port = 12345
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, port))
-        message = "Updated"
+        message = socket.gethostname()+" updated\n"
         s.send(message.encode('utf-8'))
         s.close()
-        #root2.destroy()
     else:
-        host = '127.0.0.1'
+        root.destroy()
+        host = '192.168.1.69'
         port = 12345
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, port))
-        message = "Canceled"
+        message = socket.gethostname()+" canceled by user\n"
         s.send(message.encode('utf-8'))
         s.close()
         time.sleep(10)
         ask_permition()
 
-    if __name__ == '__main__':
-        ask_permition()
+
+ask_permition()

@@ -12,3 +12,4 @@ def get_hosts(section, option):
 
 rc_osnov = get_hosts('hostnames', 'rc_osnov')
 rc_reserv = get_hosts('hostnames', 'rc_reserv')
+other_hosts = get_hosts('hostnames', 'other')
